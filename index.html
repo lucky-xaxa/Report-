@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WinGo Lottery Game</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #000000;
+            color: #ffffff;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        .login-container, .game-container {
+            padding: 50px;
+            max-width: 600px;
+            margin: auto;
+            background: #333333;
+            box-shadow: 0px 0px 20px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            display: none; /* Initially hide game container */
+        }
+        .login-container {
+            display: block; /* Show login container initially */
+        }
+        h1 {
+            color: #ffffff;
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+        input[type="text"], input[type="password"] {
+            padding: 12px;
+            margin: 10px 0;
+            width: calc(100% - 24px);
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background-color: #f1f8e9; /* Light green background for inputs */
+            color: #000;
+        }
+        input[type="submit"] {
+            background-color: #009688; /* Teal color for submit button */
+            color: #ffffff;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        input[type="submit"]:hover {
+            background-color: #00796b; /* Darker teal on hover */
+        }
+        .error {
+            color: #FF0000;
+            font-size: 18px;
+            margin-top: 10px;
+        }
+        .timer, .winning-result, .current-time, .winning-notes {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .green {
+            color: #00FF00;
+        }
+        .violet {
+            color: #7A288A;
+        }
+        .red {
+            color: #FF0000;
+        }
+        .big {
+            font-size: 24px;
+        }
+        .small {
+            font-size: 18px;
+        }
+        .button {
+            background-color: #4CAF50; /* Green color for button */
+            color: #fff;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 20px;
+            margin-top: 20px;
+            transition: background-color 0.3s ease;
+        }
+        .button:hover {
+            background-color: #388E3C; /* Darker green on hover */
+        }
+        .link {
+            display: block;
+            margin-top: 20px;
+            font-size: 18px;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .link:hover {
+            text-decoration: underline;
+        }
+        .input-container {
+            margin-top: 20px;
+        }
+        input[type="text"] {
+            padding: 10px;
+            font-size: 18px;
+            margin-right: 10px;
+            width: 80px;
+            text-align: center;
+            border-radius: 5px;
+            border: none;
+        }
+
+        /* Media Queries */
+        @media (max-width: 768px) {
+            .login-container, .game-container {
+                padding: 20px;
+            }
+            .timer, .winning-result {
+                font-size: 28px;
+            }
+            .button {
+                font-size: 18px;
+                padding: 12px 24px;
+            }
+            input[type="text"] {
+                width: 60px;
+                font-size: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .login-container, .game-container {
+                padding: 10px;
+            }
+            h1 {
+                font-size: 28px;
+            }
+            .timer, .winning-result {
+                font-size: 24px;
+            }
+            .button {
+                font-size: 16px;
+                padding: 10px 20px;
+            }
+            input[type="text"] {
+                width: 50px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Container -->
+    <div class="login-container" id="login-container">
+        <h1>Login</h1>
+        <form onsubmit="return validateLogin()">
+            <input type="text" id="username" name="username" placeholder="Username" required>
+            <input type="password" id="password" name="password" placeholder="Password" required>
+            <input type="submit" value="Login">
+            <div class="error" id="login-error"></div>
+        </form>
+    </div>
+
+    <!-- Game Container -->
+    <div class="game-container" id="game-container">
+        <h1>WinGo Lottery Game</h1>
+        <div class="timer" id="timer">00:15</div>
+        <div class="input-container">
+            <label for="periodInput">Game Period Number:</label>
+            <input type="text" id="periodInput" maxlength="4" pattern="\d{4}" title="Please enter exactly 4 digits" aria-describedby="error-message">
+            <div class="input-container">
+                <label for="fourDigitInput">Enter 4-digit number:</label>
+                <input type="text" id="fourDigitInput" maxlength="4" pattern="\d{4}" title="Please enter exactly 4 digits" aria-describedby="error-message">
+            </div>
+            <button class="button" id="play-button">Play</button>
+            <div class="error" id="error-message" aria-live="polite"></div>
+        </div>
+        <button class="button" id="play-on-external-server">Play on TP111 Server</button>
+        <div class="current-time" id="current-time">12:29:30 PM IST</div>
+        <div class="winning-result" id="winning-result"></div>
+        <div class="winning-notes" id="winning-notes"></div>
+    </div>
+
+    <script>
+        function validateLogin() {
+            // Predefined username and password
+            const correctUsername = 'luckyxaxa';
+            const correctPassword = 'mukesh00';
+
+            // Get input values
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            // Check if the credentials are correct
+            if (username === correctUsername && password === correctPassword) {
+                document.getElementById('login-container').style.display = 'none'; // Hide login container
+                document.getElementById('game-container').style.display = 'block';  // Show game container
+                return false; // Prevent form submission
+            } else {
+                document.getElementById('login-error').innerHTML = 'Incorrect username or password!';
+                return false; // Prevent form submission
+            }
+        }
+
+        let timer = 15;
+        let intervalId;
+
+        function fetchWinningResult() {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    const winningNumber = Math.floor(Math.random() * 10);
+                    resolve(winningNumber);
+                }, 5000);
+            });
+        }
+
+        function startTimer() {
+            clearInterval(intervalId);
+            intervalId = setInterval(() => {
+                if (timer <= 0) {
+                    clearInterval(intervalId);
+                    generateWinningResult();
+                } else {
+                    timer--;
+                    document.getElementById('timer').innerHTML = `00:${padZero(timer)}`;
+                }
+            }, 1000);
+        }
+
+        function padZero(number) {
+            return (number < 10 ? '0' : '') + number;
+        }
+
+        async function generateWinningResult() {
+            try {
+                const winningResult = await fetchWinningResult();
+                const winningNotes = calculateWinnings(winningResult);
+                displayWinningResult(winningResult, winningNotes);
+            } catch (error) {
+                console.error('Error fetching result:', error);
+                document.getElementById('winning-result').innerHTML = 'Error fetching result.';
+            }
+        }
+
+        function calculateWinnings(number) {
+            const stake = 100;
+            const contractAmount = stake * 0.98;
+            let winnings = 0;
+            let notes = '';
+
+            if ([1, 3, 7, 9].includes(number)) {
+                winnings = contractAmount * 2;
+                notes = `You selected Green. Your winnings are: ${winnings}`;
+            } else if ([2, 4, 6, 8].includes(number)) {
+                winnings = contractAmount * 2;
+                notes = `You selected Red. Your winnings are: ${winnings}`;
+            } else if (number === 0) {
+                winnings = contractAmount * 1.5;
+                notes = `You selected Violet. Your winnings are: ${winnings}`;
+            }
+
+            if ([5, 6, 7, 8, 9].includes(number)) {
+                notes += `. You selected Big. Your winnings are: ${contractAmount * 2}`;
+            } else {
+                notes += `. You selected Small. Your winnings are: ${contractAmount * 2}`;
+            }
+
+            if (number.toString() === document.getElementById('fourDigitInput').value) {
+                winnings = contractAmount * 9;
+                notes = `You selected the correct number. Your winnings are: ${winnings}`;
+            }
+
+            return notes;
+        }
+
+        function displayWinningResult(winningNumber, winningNotes) {
+            const winningColor = getWinningColor(winningNumber);
+            const winningSize = getWinningSize(winningNumber);
+            document.getElementById('winning-result').innerHTML = `Winning result: <span ${winningColor}>${winningNumber}</span> is ${winningSize}!`;
+            document.getElementById('winning-notes').innerHTML = winningNotes;
+        }
+
+        function getWinningColor(number) {
+            if ([1, 3, 5, 7, 9].includes(number)) {
+                return 'class="green"';
+            } else if (number === 0) {
+                return 'class="violet"';
+            } else {
+                return 'class="red"';
+            }
+        }
+
+        function getWinningSize(number) {
+            if ([5, 6, 7, 8, 9].includes(number)) {
+                return '<span class="big">Big</span>';
+            } else {
+                return '<span class="small">Small</span>';
+            }
+        }
+
+        document.getElementById('play-button').addEventListener('click', () => {
+            const number = document.getElementById('fourDigitInput').value;
+            const period = document.getElementById('periodInput').value;
+            const errorMessage = document.getElementById('error-message');
+            if (number.length === 4 && /^\d{4}$/.test(number) && period.length === 4 && /^\d{4}$/.test(period)) {
+                errorMessage.innerHTML = '';
+                timer = 15;
+                document.getElementById('timer').innerHTML = '00:15';
+                document.getElementById('winning-result').innerHTML = '';
+                document.getElementById('winning-notes').innerHTML = '';
+                startTimer();
+            } else {
+                errorMessage.innerHTML = 'Please enter valid 4-digit numbers for both period and main number.';
+            }
+        });
+
+        document.getElementById('play-on-external-server').addEventListener('click', () => {
+            window.open('https://www.tp111.in/#/home/AllLotteryGames/WinGo?typeId=1&id=1', '_blank');
+        });
+
+        function updateTime() {
+            const now = new Date();
+            const options = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, timeZoneName: 'short' };
+            document.getElementById('current-time').innerHTML = now.toLocaleTimeString('en-US', options);
+        }
+
+        setInterval(updateTime, 1000);
+    </script>
+</body>
+</html>
